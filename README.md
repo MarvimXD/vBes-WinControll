@@ -70,8 +70,11 @@ Com a conexão já estabelecida, basta selecionar a opção que deseja utilizar 
 # VERSÃO BETA - INSTÁVEL
 
 DESENVOLVIDO POR: Victor Beserra
+
 DISCORD: pegasus#7123
+
 WHATSAPP: (61) 9 8364-5211
+
 E-MAIL: mxd46934@gmail.com
 
 
