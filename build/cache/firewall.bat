@@ -1,0 +1,1 @@
+netsh advfirewall firewall add rule name=teste protocol=TCP dir=in localport=8854 action=allow

